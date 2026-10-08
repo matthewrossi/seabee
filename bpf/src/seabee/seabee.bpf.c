@@ -16,6 +16,9 @@
 #include "seabee_utils.h"
 #include "shared_rust_types.h"
 
+// Kfunc prototypes are not emitted into vmlinux.h, which contains BTF types.
+extern int bpf_path_d_path(const struct path *path, char *buf, size_t buf__sz) __ksym;
+
 /// License of the BPF program
 char LICENSE[] SEC("license") = "GPL";
 
@@ -154,7 +157,7 @@ static __always_inline u32 decide_inode_access(enum InodeAction     action,
 }
 
 // return null on error, pointer to pathbuf on success
-static __always_inline char *thread_safe_write_str_to_path(const char *data)
+static __always_inline char *thread_safe_write_str_to_path(const struct path *data)
 {
 	u32   zero = 0;
 	char *path = bpf_map_lookup_elem(&path_storage, &zero);
@@ -174,13 +177,26 @@ static __always_inline char *thread_safe_write_str_to_path(const char *data)
 	}
 
 	// write to path
-	err = bpf_probe_read_str(path, PATH_MAX, data);
-	if (err < 0) {
+	int len = bpf_path_d_path(data, path, PATH_MAX);
+	if (len <= 0 || len > PATH_MAX) {
 		u64 data[] = { (u64)data };
 		log_generic_msg(LOG_LEVEL_ERROR, LOG_REASON_ERROR,
 		                "Error: failed to write data '%s' to path buf", data,
 		                sizeof(data));
 		return NULL;
+	}
+
+	// bpf_path_d_path leaves d_path's original end-of-buffer copy behind, so
+	// clear only the part of that copy beyond the path moved to offset 0.
+	volatile char *volatile_path = path;
+	if (len < PATH_MAX) {
+		u32 clear_from = PATH_MAX - len;
+		if (clear_from < len) {
+			clear_from = len;
+		}
+		for (u32 i = clear_from; i < PATH_MAX; i++) {
+			volatile_path[i] = 0;
+		}
 	}
 
 	return path;
@@ -748,7 +764,7 @@ int BPF_PROG(seabeectl_auth, struct sock *sock, struct sock *other,
 SEC("lsm/bprm_check_security")
 int BPF_PROG(seabee_label_process, struct linux_binprm *bprm, int ret)
 {
-	char *path = thread_safe_write_str_to_path(bprm->filename);
+	char *path = thread_safe_write_str_to_path(&bprm->file->f_path);
 	if (!path) {
 		u64 data[] = { (u64)data };
 		log_generic_msg(LOG_LEVEL_ERROR, LOG_REASON_ERROR,
