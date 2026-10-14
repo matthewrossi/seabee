@@ -1,6 +1,7 @@
 // SPDX-License-Identifier: Apache-2.0
 
 use std::{
+    path::Path,
     process::{Command, Stdio},
     thread, time,
 };
@@ -115,26 +116,15 @@ fn remove_config() -> Result<()> {
     Ok(())
 }
 
-fn seabeectl_clean_keys_policies() -> Result<()> {
-    let status = Command::new(SEABEECTL_EXE)
-        .args(["clean", "policy"])
-        .stdout(Stdio::null())
-        .status()?;
-    if !status.success() {
-        return Err(anyhow!(
-            "Failed to run seabeectl clean policy\nstatus: {}",
-            status
-        ));
-    }
-    let status = Command::new(SEABEECTL_EXE)
-        .args(["clean", "keys"])
-        .stdout(Stdio::null())
-        .status()?;
-    if !status.success() {
-        return Err(anyhow!(
-            "Failed to run seabeectl clean keys\nstatus: {}",
-            status
-        ));
+fn clean_keys_policies() -> Result<()> {
+    for path in [
+        constants::POLICY_DIR,
+        constants::POL_SIGNATURE_DIR,
+        constants::KEY_DIR,
+        constants::KEY_SIGNATURE_DIR,
+        constants::KEYLIST_PATH,
+    ] {
+        seabee::utils::remove_if_exists(Path::new(path))?;
     }
     Ok(())
 }
@@ -152,7 +142,7 @@ fn check_root_key() -> Result<()> {
 fn policy_test_setup() -> Result<()> {
     seabee::utils::verify_requirements()?;
     check_root_key()?;
-    seabeectl_clean_keys_policies()?;
+    clean_keys_policies()?;
     Ok(())
 }
 

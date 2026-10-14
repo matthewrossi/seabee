@@ -55,24 +55,6 @@ This uses the rust [openssl crate](https://docs.rs/openssl/latest/openssl/) to v
 This command is mostly used for testing and experimentation.
 It uses the same underlying logic as SeaBee to verify files.
 
-## `seabeectl clean`
-
-Used to clean up SeaBee files. Use with caution, this will delete saved keys, policies, signatures, and configs.
-
-example: `sudo seabeectl clean policy`
-
-This command can only be used while SeaBee is turned off.
-This is because it deletes saved SeaBee files.
-Whenever a policy or key is added, SeaBee will save it to `/etc/seabee`.
-This allows SeaBee to reload keys or policies when the system reboots.
-While SeaBee is running, these files cannot be modified.
-
-- `policy` deletes saved policies and their signatures
-- `keys` deletes saved keys and signatures
-- `root-key` deletes the root key. Note that SeaBee needs a root key in order to run.
-- `config` deletes the saved SeaBee config.
-- `all` does all of the above by deleting `/etc/seabee`
-
 ## `seabeectl config`
 
 Add, update, or delete the saved SeaBee config.

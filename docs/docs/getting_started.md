@@ -158,6 +158,10 @@ If you encounter errors, try building from source or open an [issue on github](h
 
 ### Uninstall
 
+Shut SeaBee down and wait for its protections to unload before running the
+uninstall script. Uninstalling permanently removes all saved keys, policies,
+signatures, the root key, and configuration.
+
 ```bash
 wget -qO- https://raw.githubusercontent.com/nationalsecurityagency/seabee/main/install/uninstall.sh | sudo bash
 ```

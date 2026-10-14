@@ -1,7 +1,8 @@
 #!/usr/bin/env bash
 set -euo pipefail
 
-seabeectl clean all
+# SeaBee must be shut down and its protections unloaded before uninstalling.
+rm -r /etc/seabee
 rm /usr/sbin/seabeectl
 rm /usr/sbin/seabee
 rm /etc/systemd/system/seabee.service

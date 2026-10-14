@@ -59,13 +59,15 @@ then we can kill it with `sudo kill -2 <Pid>` or `systemctl stop <daemon_name>`.
 
 ## SeaBee state corrupted
 
-There may be something wrong with the internal state of SeaBee, if so, we can clean it up with `seabeectl clean`
+If SeaBee's saved state is corrupted, first shut SeaBee down and wait for its
+protections to unload. Then, to reset all saved state, run:
 
-- `sudo seabeectl clean --help`
+```bash
+sudo rm -r /etc/seabee
+```
 
-To do a hard reset of SeaBee data, use `sudo seabeectl clean all`
-
-This will remove all keys, policies, the root key, configurations, ect.
+This permanently removes all saved keys, policies, signatures, the root key, and
+configuration. You must reinstall a root key before starting SeaBee again.
 
 Once that is done, you should be able to use the [getting started](./getting_started.md) instructions to get SeaBee working again from scratch.
 

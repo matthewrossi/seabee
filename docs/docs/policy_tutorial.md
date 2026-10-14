@@ -643,6 +643,8 @@ rm rsa-public-key.pem
 
 sudo apt remove kubearmor
 
-sudo seabeectl clean policy
-sudo seabeectl clean keys
+# Wait for SeaBee's protections to unload before deleting saved state.
+sudo rm -r /etc/seabee/policy /etc/seabee/policy_sigs
+sudo rm -r /etc/seabee/keys /etc/seabee/key_sigs
+sudo rm /etc/seabee/keylist.yaml
 ```

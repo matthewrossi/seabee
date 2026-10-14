@@ -3,7 +3,7 @@ use std::{
     fs,
     io::{ErrorKind, Read, Write},
     os::unix::net::UnixStream,
-    path::{Path, PathBuf},
+    path::PathBuf,
 };
 
 use anyhow::{anyhow, Result};
@@ -45,11 +45,6 @@ pub enum LocalCommand {
     Sign(crypto::SignInfo),
     /// Test verifying a policy with a public verification key
     Verify(crypto::VerifyInfoCLI),
-    /// Remove SeaBee policies and keys.
-    ///
-    /// Only works while SeaBee is turned off. Intended for debugging.
-    #[command(subcommand)]
-    Clean(CleanCommand),
     /// Control the saved SeaBee Config
     #[command(subcommand)]
     Config(ConfigCommand),
@@ -60,20 +55,6 @@ pub enum LocalCommand {
         #[arg(default_value = "shutdown_request.yaml")]
         path: PathBuf,
     },
-}
-
-#[derive(Clone, Debug, Subcommand)]
-pub enum CleanCommand {
-    /// Remove all saved SeaBee policies
-    Policy,
-    /// Remove all saved SeaBee keys. Policies may not verify on next boot.
-    Keys,
-    /// Remove the SeaBee root key. SeaBee will not start without a root key installed.
-    RootKey,
-    /// Remove the SeaBee saved config
-    Config,
-    /// Remove all SeaBee saved data
-    All,
 }
 
 #[derive(Clone, Debug, Subcommand)]
@@ -260,33 +241,12 @@ pub fn execute_local_command(cmd: LocalCommand) -> Result<()> {
         LocalCommand::Alg => crypto::list_crypto_alg(),
         LocalCommand::Sign(info) => crypto::sign_file(info)?,
         LocalCommand::Verify(info) => crypto::verify_policy_signature_cli(info)?,
-        LocalCommand::Clean(subcmd) => seabeectl_clean(subcmd)?,
         LocalCommand::Config(subcmd) => seabeectl_config(subcmd)?,
         LocalCommand::ShutdownRequest { path } => seabeectl_generate_shutdown(path)?,
     };
 
     println!("{output}");
     Ok(())
-}
-
-fn seabeectl_clean(cmd: &CleanCommand) -> Result<String> {
-    match cmd {
-        CleanCommand::All => utils::remove_if_exists(Path::new(constants::SEABEE_DIR))?,
-        CleanCommand::Keys => {
-            utils::remove_if_exists(Path::new(constants::KEY_DIR))?;
-            utils::remove_if_exists(Path::new(constants::KEY_SIGNATURE_DIR))?;
-            utils::remove_if_exists(Path::new(constants::KEYLIST_PATH))?;
-        }
-        CleanCommand::Policy => {
-            utils::remove_if_exists(Path::new(constants::POLICY_DIR))?;
-            utils::remove_if_exists(Path::new(constants::POL_SIGNATURE_DIR))?;
-        }
-        CleanCommand::RootKey => {
-            utils::remove_if_exists(Path::new(constants::SEABEE_ROOT_KEY_PATH))?
-        }
-        CleanCommand::Config => utils::remove_if_exists(Path::new(constants::CONFIG_PATH))?,
-    }
-    Ok("Success!".to_string())
 }
 
 fn seabeectl_config(cmd: &ConfigCommand) -> Result<String> {
