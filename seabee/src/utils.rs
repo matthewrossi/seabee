@@ -44,29 +44,25 @@ pub fn verify_seabee_unloaded() -> Result<()> {
     // we will check if the programs have been removed by creating a file in /etc/seabee
     // which should be blocked by an existing version of seabee
 
-    let max_wait = 5;
-    let mut waited = 0;
-    for _ in 1..max_wait {
+    let max_attempts = 5;
+    for attempt in 1..=max_attempts {
         if fs::OpenOptions::new()
             .create(true)
             .append(true)
             .open(constants::CONFIG_PATH)
             .is_ok()
         {
-            break;
+            return Ok(());
         }
-        std::thread::sleep(std::time::Duration::from_secs(1));
-        waited += 1;
+        if attempt < max_attempts {
+            std::thread::sleep(std::time::Duration::from_secs(1));
+        }
     }
 
-    if waited >= max_wait {
-        return Err(anyhow!(
-            "failed 'verify_seabee_unloaded' check. Lacking permissions to edit files in {}",
-            constants::SEABEE_DIR
-        ));
-    }
-
-    Ok(())
+    Err(anyhow!(
+        "failed 'verify_seabee_unloaded' check. Lacking permissions to edit files in {}",
+        constants::SEABEE_DIR
+    ))
 }
 
 /// Error if file does not have extensions in list of expected_ext
