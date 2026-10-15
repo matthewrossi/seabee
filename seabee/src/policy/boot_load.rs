@@ -25,14 +25,9 @@ impl super::SeaBeePolicy {
             debug!("try load key: {:?}, {}", key.path, key.sig_digest);
             let sig_path = fs_api::get_sig_path(&key.path, &FileType::Key)?;
             let result = if sig_path.exists() {
-                self.add_key(
-                    &key.path,
-                    &Some(sig_path),
-                    &Some(key.sig_digest),
-                    Some(&key.path),
-                )
+                self.add_key(&key.path, &Some(sig_path), &Some(key.sig_digest), false)
             } else {
-                self.add_key(&key.path, &None, &None, Some(&key.path))
+                self.add_key(&key.path, &None, &None, false)
             };
 
             // report result
@@ -45,8 +40,7 @@ impl super::SeaBeePolicy {
         Ok(())
     }
 
-    /// overwrites all existing policies with policy from policy directory
-    /// does not modify kernel structures
+    /// Load saved policies into memory and the kernel without rewriting files.
     pub fn boot_time_policy_load(&mut self, maps: &SeaBeeMapHandles) -> Result<()> {
         debug!("Start boot time policy load");
         // Get policies from policy directory
