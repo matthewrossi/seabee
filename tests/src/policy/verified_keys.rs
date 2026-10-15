@@ -7,10 +7,14 @@ use crate::{create_test, policy::daemon_status};
 
 pub fn add_ecdsa_key() -> Result<(), Failed> {
     shared::add_key_signed(ECDSA_PUB, ECDSA_PUB_ROOT_SIG, Expected::Success)?;
+    shared::list_keys(2)?;
+    shared::add_key_signed(ECDSA_PUB, ECDSA_PUB_ROOT_SIG, Expected::Success)?;
     shared::list_keys(2)
 }
 
 pub fn add_rsa_key() -> Result<(), Failed> {
+    shared::add_key_signed(RSA_PUB, RSA_PUB_ROOT_SIG, Expected::Success)?;
+    shared::list_keys(3)?;
     shared::add_key_signed(RSA_PUB, RSA_PUB_ROOT_SIG, Expected::Success)?;
     shared::list_keys(3)
 }

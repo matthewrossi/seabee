@@ -307,7 +307,7 @@ impl super::SeaBeePolicy {
             KeyIdentifier::File { ref path } => {
                 let target_key = SeaBeeKey::new_key(path, 0)?;
                 for key in self.verification_keys.values() {
-                    if key.try_eq(&target_key)? {
+                    if key.public_eq(&target_key) {
                         return Ok(key.to_string());
                     }
                 }
@@ -333,7 +333,13 @@ impl super::SeaBeePolicy {
         if self.verify_keys {
             self.verify_signature(src_path, sig_path, sig_digest, Some(super::ROOT_KEY_ID))?;
         }
-        let mut new_key = SeaBeeKey::new_key(src_path, self.get_next_key_id()?)?;
+        let mut new_key = SeaBeeKey::new_key(src_path, 0)?;
+        for key in self.verification_keys.values() {
+            if key.public_eq(&new_key) {
+                return Ok(format!("Success! Key already loaded.\n{key}"));
+            }
+        }
+        new_key.id = self.get_next_key_id()?;
         new_key.seabee_path = match saved_path {
             Some(path) => path.to_path_buf(),
             None => fs_api::get_seabee_key_path()?,
@@ -460,7 +466,7 @@ impl super::SeaBeePolicy {
         let input_key = SeaBeeKey::new_key(path, 0)?;
 
         for key in self.verification_keys.values() {
-            if key.try_eq(&input_key)? {
+            if key.public_eq(&input_key) {
                 return Ok(Some(key));
             }
         }

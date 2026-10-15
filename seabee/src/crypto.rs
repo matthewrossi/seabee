@@ -9,7 +9,6 @@ use clap::Args;
 use itertools::Itertools;
 use openssl::{
     self,
-    bn::BigNumContext,
     error::ErrorStack,
     hash::MessageDigest,
     pkey::{Id, PKey, Public},
@@ -66,26 +65,9 @@ impl SeaBeeKey {
         })
     }
 
-    /// Two SeaBeeKeys are equal if they are both RSA and have the same modulus (n)
-    /// and exponent (e), or if they are both EC keys and EC_POINT_cmp returns 0.
-    ///
-    /// error if EC_POINT_cmp returns -1 or BN_CTX_new fails
-    pub fn try_eq(&self, other: &Self) -> Result<bool> {
-        if self.key.id() == Id::EC && other.key.id() == Id::EC {
-            let mut ctx = BigNumContext::new()?;
-            let ec_key = self.key.ec_key()?;
-            return Ok(ec_key.public_key().eq(
-                ec_key.group(),
-                other.key.ec_key()?.public_key(),
-                &mut ctx,
-            )?);
-        }
-        if self.key.id() == Id::RSA && other.key.id() == Id::RSA {
-            let our_key = self.key.rsa()?;
-            let other_key = other.key.rsa()?;
-            return Ok((our_key.e() == other_key.e()) && (our_key.n() == other_key.n()));
-        }
-        Ok(false)
+    /// Compare public key material, ignoring IDs, paths, and signature metadata.
+    pub fn public_eq(&self, other: &Self) -> bool {
+        self.key.public_eq(&other.key)
     }
 }
 
