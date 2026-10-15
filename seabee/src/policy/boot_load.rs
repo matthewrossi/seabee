@@ -6,7 +6,8 @@ use tracing::{debug, error, info};
 
 use crate::{
     constants::{self, POLICY_DIR, SEABEE_ROOT_KEY_PATH},
-    policy::fs_api::{self, FileType},
+    crypto::SeaBeeKey,
+    policy::fs_api::{self, FileType, SavedKey},
     SeaBeeMapHandles,
 };
 
@@ -23,12 +24,7 @@ impl super::SeaBeePolicy {
 
             // load other keys
             debug!("try load key: {:?}, {}", key.path, key.sig_digest);
-            let sig_path = fs_api::get_sig_path(&key.path, &FileType::Key)?;
-            let result = if sig_path.exists() {
-                self.add_key(&key.path, &Some(sig_path), &Some(key.sig_digest), false)
-            } else {
-                self.add_key(&key.path, &None, &None, false)
-            };
+            let result = self.load_key(&key);
 
             // report result
             match result {
@@ -37,6 +33,27 @@ impl super::SeaBeePolicy {
             }
         }
 
+        Ok(())
+    }
+
+    /// Register a saved key without modifying the filesystem.
+    fn load_key(&mut self, saved_key: &SavedKey) -> Result<()> {
+        let sig_path = fs_api::get_sig_path(&saved_key.path, &FileType::Key)?;
+        if self.verify_keys {
+            let sig_path = sig_path.exists().then_some(sig_path.clone());
+            self.verify_signature(
+                &saved_key.path,
+                &sig_path,
+                &Some(saved_key.sig_digest.clone()),
+                Some(super::ROOT_KEY_ID),
+            )?;
+        }
+
+        let mut new_key = SeaBeeKey::new_key(&saved_key.path, self.get_next_key_id()?)?;
+        new_key.seabee_path = saved_key.path.clone();
+        new_key.sig_path = sig_path;
+        new_key.sig_digest = saved_key.sig_digest.clone();
+        self.verification_keys.insert(new_key.id, new_key);
         Ok(())
     }
 
