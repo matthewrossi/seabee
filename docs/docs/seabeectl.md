@@ -55,28 +55,6 @@ This uses the rust [openssl crate](https://docs.rs/openssl/latest/openssl/) to v
 This command is mostly used for testing and experimentation.
 It uses the same underlying logic as SeaBee to verify files.
 
-## `seabeectl config`
-
-Add, update, or delete the saved SeaBee config.
-
-example: `sudo seabeectl config get`
-
-This command adds convenience for interacting with the SeaBee _saved_ configuration.
-The saved configuration lives at `/etc/seabee/config.yaml`.
-It is important to remember that the SeaBee saved configuration may be different than
-the actual configuration that SeaBee is using.
-This is because the any option not specified in the saved configuration will use a default.
-Also, if command line arguments are used together with saved configuration, then
-the command line option will take precedence over a saved configuration.
-For more information about SeaBee configuration, see the [config docs](./config.md).
-
-There are three subcommands for `seabeectl config`
-
-- `get` dumps the contents of the current saved SeaBee config
-- `update` update the current config with a new one from a file.
-This just performs a copy and overwrites the existing saved config.
-- `delete` deletes the current saved config.
-
 ## `seabeectl shutdown-request`
 
 Generate a SeaBee shutdown request for this machine.

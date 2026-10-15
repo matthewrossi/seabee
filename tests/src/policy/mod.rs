@@ -1,6 +1,7 @@
 // SPDX-License-Identifier: Apache-2.0
 
 use std::{
+    fs,
     path::Path,
     process::{Command, Stdio},
     thread, time,
@@ -89,30 +90,9 @@ fn stop_daemon() -> Result<()> {
 }
 
 fn update_config(path: &str) -> Result<()> {
-    let status = Command::new(SEABEECTL_EXE)
-        .args(["config", "update", path])
-        .stdout(Stdio::null())
-        .status()?;
-    if !status.success() {
-        return Err(anyhow!(
-            "Failed to update SeaBee config.\nstatus: {}",
-            status
-        ));
-    }
-    Ok(())
-}
-
-fn remove_config() -> Result<()> {
-    let status = Command::new(SEABEECTL_EXE)
-        .args(["config", "remove"])
-        .stdout(Stdio::null())
-        .status()?;
-    if !status.success() {
-        return Err(anyhow!(
-            "Failed to remove SeaBee config.\nstatus: {}",
-            status
-        ));
-    }
+    seabee::utils::verify_seabee_unloaded()?;
+    fs::create_dir_all(constants::SEABEE_DIR)?;
+    fs::copy(path, constants::CONFIG_PATH)?;
     Ok(())
 }
 
@@ -147,7 +127,8 @@ fn policy_test_setup() -> Result<()> {
 }
 
 fn policy_test_teardown() -> Result<()> {
-    remove_config()?;
+    seabee::utils::verify_seabee_unloaded()?;
+    fs::remove_file(constants::CONFIG_PATH)?;
     Ok(())
 }
 

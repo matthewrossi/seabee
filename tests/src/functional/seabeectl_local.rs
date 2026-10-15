@@ -178,6 +178,5 @@ pub fn tests() -> Vec<libtest_mimic::Trial> {
         create_test!(seabeectl_sign_verify_rsa),
         create_test!(seabeectl_sign_verify_default),
         create_test!(seabeectl_verify_invalid_key_type),
-        //TODO: seabeectl config cannot be tested while SeaBee is running
     ]
 }

@@ -164,7 +164,7 @@ will have to obtain a signature from the root key.
 
 At startup, SeaBee pulls configuration information from `/etc/seabee/config.yaml`
 
-For convenience, this file can be updated while SeaBee is turned off via [`seabeectl config`](./seabeectl.md#seabeectl-config).
+Install or edit this file directly while SeaBee is turned off.
 
 This file can accept all of the same key-value pairs as the command line.
 

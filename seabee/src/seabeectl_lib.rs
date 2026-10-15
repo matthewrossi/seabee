@@ -45,9 +45,6 @@ pub enum LocalCommand {
     Sign(crypto::SignInfo),
     /// Test verifying a policy with a public verification key
     Verify(crypto::VerifyInfoCLI),
-    /// Control the saved SeaBee Config
-    #[command(subcommand)]
-    Config(ConfigCommand),
     /// Generate a shutdown request
     ///
     /// The request will have to be signed before it can be used
@@ -55,16 +52,6 @@ pub enum LocalCommand {
         #[arg(default_value = "shutdown_request.yaml")]
         path: PathBuf,
     },
-}
-
-#[derive(Clone, Debug, Subcommand)]
-pub enum ConfigCommand {
-    /// Get the current saved config from /etc/seabee/config.yaml
-    Get,
-    /// Update the current saved config while SeaBee is turned off
-    Update { path: PathBuf },
-    /// Remove the current SeaBee saved config
-    Remove,
 }
 
 #[derive(Clone, Debug, Deserialize, Serialize, Subcommand)]
@@ -241,32 +228,10 @@ pub fn execute_local_command(cmd: LocalCommand) -> Result<()> {
         LocalCommand::Alg => crypto::list_crypto_alg(),
         LocalCommand::Sign(info) => crypto::sign_file(info)?,
         LocalCommand::Verify(info) => crypto::verify_policy_signature_cli(info)?,
-        LocalCommand::Config(subcmd) => seabeectl_config(subcmd)?,
         LocalCommand::ShutdownRequest { path } => seabeectl_generate_shutdown(path)?,
     };
 
     println!("{output}");
-    Ok(())
-}
-
-fn seabeectl_config(cmd: &ConfigCommand) -> Result<String> {
-    utils::verify_seabee_unloaded()?;
-    match cmd {
-        ConfigCommand::Get => return Ok(fs::read_to_string(constants::CONFIG_PATH)?),
-        ConfigCommand::Remove => fs::remove_file(constants::CONFIG_PATH)?,
-        ConfigCommand::Update { path } => update_config(path)?,
-    };
-    Ok("Success!".to_string())
-}
-
-fn update_config(path: &PathBuf) -> Result<()> {
-    utils::create_dir_if_not_exists(constants::SEABEE_DIR)?;
-    if let Err(e) = fs::copy(path, constants::CONFIG_PATH) {
-        return Err(anyhow!(
-            "Failed to update SeaBee saved config at {}\n{e}",
-            path.display()
-        ));
-    }
     Ok(())
 }
 

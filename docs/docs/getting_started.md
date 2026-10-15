@@ -141,7 +141,7 @@ See [config docs](./config.md) for more about seabee configuration.
 
 Create a config to enable ctrl+c for testing: `echo "sigint: true" > config.yaml`
 
-Install config: `sudo seabeectl config update config.yaml`
+Install config: `sudo cp config.yaml /etc/seabee/config.yaml`
 
 ### Test installation
 
