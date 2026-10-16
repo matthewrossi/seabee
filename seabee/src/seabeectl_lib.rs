@@ -152,7 +152,10 @@ pub enum KeyIdentifier {
     /// Identify by Id
     Id { id: u32 },
     /// Identify by a file path
-    File { path: PathBuf },
+    File {
+        #[arg(value_parser = utils::str_to_abs_pathbuf)]
+        path: PathBuf,
+    },
 }
 
 impl std::fmt::Display for KeyIdentifier {
@@ -173,7 +176,10 @@ pub enum ObjIdentifier {
     /// Identify by name
     Name { name: String },
     /// Identify by a file path
-    File { path: PathBuf },
+    File {
+        #[arg(value_parser = utils::str_to_abs_pathbuf)]
+        path: PathBuf,
+    },
 }
 
 impl Default for ObjIdentifier {
